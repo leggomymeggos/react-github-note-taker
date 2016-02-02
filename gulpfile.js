@@ -6,6 +6,7 @@ var browserify = require('browserify');
 var watchify = require('watchify');
 var reactify = require('reactify');
 var streamify = require('gulp-streamify');
+var broswerSync = require('browser-sync');
 
 var path = {
     html: 'src/index.html',
@@ -14,7 +15,7 @@ var path = {
     dest_src: 'dist/src',
     dest_build: 'dist/build',
     dest: 'dist',
-    entry_point: './src/js/app.js'
+    entry_point: 'src/index.js'
 };
 
 gulp.task('transform', function () {
@@ -39,7 +40,8 @@ gulp.task('replaceHTML', function () {
 gulp.task('build', ['replaceHTML'], function () {
     browserify({
         entries: [path.entry_point],
-        transform: [reactify]
+        transform: 'babelify',
+        presets: ['es2015', 'react']
     })
         .bundle()
         .pipe(source(path.minified_out))
@@ -52,7 +54,8 @@ gulp.task('watch', function () {
 
     var watcher = watchify(browserify({
         entries: [path.entry_point],
-        transform: [reactify],
+        transform: 'babelify',
+        presets: ['es2015', 'react'],
         debug: true,
         cache: {},
         packageCache: {},
@@ -69,4 +72,12 @@ gulp.task('watch', function () {
         .pipe(gulp.dest(path.dest_src));
 });
 
-gulp.task('default', ['watch']);
+gulp.task('serve', ['watch'], function () {
+    broswerSync.init({
+        server: {
+            baseDir: 'dist'
+        }
+    });
+});
+
+gulp.task('default', ['serve']);
