@@ -6,16 +6,18 @@ var browserify = require('browserify');
 var watchify = require('watchify');
 var reactify = require('reactify');
 var streamify = require('gulp-streamify');
-var broswerSync = require('browser-sync');
+var browserSync = require('browser-sync');
+var notify = require('gulp-notify');
+var babelify = require('babelify');
 
 var path = {
-    html: 'src/index.html',
+    html: 'app/src/index.html',
     minified_out: 'build.min.js',
     out: 'build.js',
     dest_src: 'dist/src',
     dest_build: 'dist/build',
     dest: 'dist',
-    entry_point: 'src/index.js'
+    entry_point: 'app/src/index.js'
 };
 
 gulp.task('transform', function () {
@@ -34,7 +36,8 @@ gulp.task('replaceHTML', function () {
         .pipe(htmlreplace({
             'js': 'build/' + path.minified_out
         }))
-        .pipe(gulp.dest(path.dest));
+        .pipe(gulp.dest(path.dest))
+        .pipe(browserSync.reload({stream: true}));
 });
 
 gulp.task('build', ['replaceHTML'], function () {
@@ -49,31 +52,34 @@ gulp.task('build', ['replaceHTML'], function () {
         .pipe(gulp.dest(path.dest_build));
 });
 
-gulp.task('watch', function () {
-    gulp.watch(path.html, ['copy']);
-
+gulp.task('watchify', ['watch'], function () {
     var watcher = watchify(browserify({
         entries: [path.entry_point],
-        transform: 'babelify',
-        presets: ['es2015', 'react'],
         debug: true,
         cache: {},
         packageCache: {},
         fullPaths: true
     }));
 
-    return watcher.on('update', function () {
-            watcher.bundle()
-                .pipe(source(path.out))
-                .pipe(gulp.dest(path.dest_src));
-        })
-        .bundle()
-        .pipe(source(path.out))
-        .pipe(gulp.dest(path.dest_src));
+    function rebundle() {
+        return watcher.bundle()
+            .pipe(source(path.out))
+            .pipe(gulp.dest(path.dest_src))
+            .pipe(browserSync.reload({stream: true}));
+    }
+
+    watcher.transform(babelify).on('update', rebundle);
+    return rebundle();
 });
 
-gulp.task('serve', ['watch'], function () {
-    broswerSync.init({
+gulp.task('watch', function () {
+    gulp.watch(path.html, ['copy']);
+    gulp.watch(path.entry_point, ['transform']);
+
+});
+
+gulp.task('serve', ['watchify'], function () {
+    browserSync.init({
         server: {
             baseDir: 'dist'
         }
