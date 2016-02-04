@@ -21,15 +21,16 @@ class Detail extends React.Component {
     }
 
     fetchFromGithub(type) {
+        console.log('type:', type);
         request.get('https://api.github.com/repos/facebook/react/' + type)
             .end((error, response) => {
                 if (!error && response) {
+                    console.log('error', error);
                     this.setState({[type]: response.body});
                 } else {
                     console.error('There was an error fetching from Github', error);
                 }
             });
-
     }
 
     renderForks() {
@@ -71,8 +72,8 @@ class Detail extends React.Component {
         );
     }
 
-    setSelected(selected){
-        this.setState({ selected });
+    setSelected(selected) {
+        this.setState({selected});
     }
 
     renderSelected() {

@@ -9,6 +9,8 @@ var streamify = require('gulp-streamify');
 var browserSync = require('browser-sync');
 var notify = require('gulp-notify');
 var babelify = require('babelify');
+var $ = require('gulp-load-plugins')();
+
 
 var path = {
     html: 'app/src/index.html',
@@ -84,6 +86,13 @@ gulp.task('serve', ['watchify'], function () {
             baseDir: 'dist'
         }
     });
+});
+
+gulp.task('test', function() {
+    return gulp.src('app/__tests__/**/*.js', {read: false})
+        .pipe($.shell([
+            'jest'
+        ]));
 });
 
 gulp.task('default', ['serve']);
